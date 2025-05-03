@@ -1,0 +1,32 @@
+# version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: flask-backend
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: next-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: goti
+      POSTGRES_DB: music_compositions
+    ports:
+      - "5432:5432"
