@@ -1,7 +1,32 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+import type { Configuration } from 'webpack'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  webpack: (config: Configuration, { isServer }) => {
+    if (!isServer) {
+      config.resolve = {
+        ...config.resolve,
+        fallback: {
+          fs: false,
+          path: false,
+          os: false,
+          crypto: false,
+          module: false,
+          v8: false,
+          perf_hooks: false,
+          ...(config.resolve?.fallback || {}),
+        },
+      }
+    }
+    return config
+  },
+  transpilePackages: ['tailwindcss'],
+  experimental: {
+    optimizePackageImports: ['tailwindcss'],
+  },
 
-export default nextConfig;
+}
+module.exports = {
+  reactStrictMode: false, // dev only
+};
+export default nextConfig

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   const login = async (username: string, password: string) => {
-    const res = await fetch('http://127.0.0.1:5000/login', {
+    const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signup = async (email: string, username: string, password: string) => {
-    const res = await fetch('http://127.0.0.1:5000/signup', {
+    const res = await fetch(`${BACKEND_URL}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -55,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    await fetch('http://127.0.0.1:5000/logout', {
+    await fetch(`${BACKEND_URL}/logout`, {
       method: 'POST',
       credentials: 'include',
     });

@@ -21,42 +21,48 @@ from app.auth.get_kern_data import get_kern_data_blueprint
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'swar_lipi_app_2025'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)    
-CORS(app, 
-     supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization"],
-     expose_headers=["Set-Cookie"],
-     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-
-
-if app.debug:
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = False
-else:
-    # Production settings
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-    app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_DOMAIN'] = None 
-
-initialise_db()
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['TIMEOUT'] = 500
 
-app.register_blueprint(login_blueprint, supports_credentials=True)
-app.register_blueprint(signup_blueprint, supports_credentials=True)    
-app.register_blueprint(logout_blueprint, supports_credentials=True)
-app.register_blueprint(get_user_blueprint, supports_credentials=True)
-app.register_blueprint(upload_blueprint, supports_credentials=True)
-app.register_blueprint(initial_rows_blueprint, supports_credentials=True)
-app.register_blueprint(image_blueprint, supports_credentials=True)
-app.register_blueprint(update_initial_rows_blueprint, supports_credentials=True)
-app.register_blueprint(update_sam_taali_blueprint, supports_credentials=True)
-app.register_blueprint(final_rows_blueprint, supports_credentials=True)
-app.register_blueprint(fetch_image_blueprint, supports_credentials=True)
-app.register_blueprint(final_save_blueprint, supports_credentials=True)
-app.register_blueprint(save_kern_blueprint, supports_credentials=True)
-app.register_blueprint(get_segmented_data_blueprint, supports_credentials=True)
-app.register_blueprint(get_kern_data_blueprint, supports_credentials=True)
+# CORS configuration
+CORS(app,
+     #origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+     expose_headers=["Set-Cookie"],
+     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+# Session settings for production/development
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+    app.config['SESSION_COOKIE_SECURE'] = True
+else:
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Default for development
+    app.config['SESSION_COOKIE_SECURE'] = False
+
+app.config['SESSION_COOKIE_DOMAIN'] = None
+
+# Initialize database
+initialise_db()
+
+# Register blueprints
+app.register_blueprint(login_blueprint)
+app.register_blueprint(signup_blueprint)
+app.register_blueprint(logout_blueprint)
+app.register_blueprint(get_user_blueprint)
+app.register_blueprint(upload_blueprint)
+app.register_blueprint(initial_rows_blueprint)
+app.register_blueprint(image_blueprint)
+app.register_blueprint(update_initial_rows_blueprint)
+app.register_blueprint(update_sam_taali_blueprint)
+app.register_blueprint(final_rows_blueprint)
+app.register_blueprint(fetch_image_blueprint)
+app.register_blueprint(final_save_blueprint)
+app.register_blueprint(save_kern_blueprint)
+app.register_blueprint(get_segmented_data_blueprint)
+app.register_blueprint(get_kern_data_blueprint)
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0', port = 5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
+

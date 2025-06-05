@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, make_response
 import os
 from ..config import PATHS
 
@@ -25,9 +25,12 @@ def upload_pdf():
         
         file.save(file_path)
         PATHS['curr_pdf_path'] = file_path
-        return jsonify({
+        response = make_response(jsonify({
             "message": "File uploaded successfully",
             "file_path": upload_folder,
-        }), 200
+        }), 200)
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        return response
 
     return jsonify({"error": "Invalid file format. Only PDFs are allowed."}), 400

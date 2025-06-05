@@ -18,6 +18,7 @@ kern_data_store = None
 def final_save():
     print("################################ FINAL DATA ################################")
     data = request.get_json()
+    print("data", data)
     global kern_data_store
     #load old data
     # predictions = load_rows_from_file("predicitons")
@@ -62,22 +63,24 @@ def final_save():
 
     taal = get_metadata_field(field='taal_name')
     sthayee_sam_beat = get_metadata_field(field='sthayee.sam_beat')
+    if sthayee_sam_beat is not None:
+
 
     # Calculate divisions and vibhaag for sthayee
-    sthayee_division, sthayee_vibhaag = calculate_divisions_and_vibhaag(taal, sthayee_sam_beat)
+        sthayee_division, sthayee_vibhaag = calculate_divisions_and_vibhaag(taal, sthayee_sam_beat)
 
     # Number of beats in one cycle of given taal
-    beat_count = get_taal_field(taal, field_name="beat_count")
+        beat_count = get_taal_field(taal, field_name="beat_count")
 
-    sthayee_predictions = load_categorized_flatten_predictions("sthayee")
+        sthayee_predictions = load_categorized_flatten_predictions("sthayee")
+        print("sthayee_predictions", sthayee_predictions)
+        sthayee_meend = sthayee_predictions["meend"]
+        sthayee_kann_swar = sthayee_predictions["kann_swar"]
+        sthayee_swar = sthayee_predictions["swar"]
 
-    sthayee_meend = sthayee_predictions["meend"]
-    sthayee_kann_swar = sthayee_predictions["kann_swar"]
-    sthayee_swar = sthayee_predictions["swar"]
+        sthayee_kern_text, sthayee_kern = generate_kern(sthayee_meend, sthayee_kann_swar, sthayee_swar, sthayee_division, beat_count)
 
-    sthayee_kern_text, sthayee_kern = generate_kern(sthayee_meend, sthayee_kann_swar, sthayee_swar, sthayee_division, beat_count)
-
-    sthayee_header = "!! Sthayee"
+        sthayee_header = "!! Sthayee"
 
 
     antara_sam_beat = get_metadata_field(field='antara.sam_beat')
@@ -251,5 +254,6 @@ def final_save():
         })
     
     kern_data_store = response_data
-    return jsonify(kern_data_store), 200
+    return jsonify(response_data), 200
+
 

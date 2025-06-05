@@ -1,10 +1,10 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-DB_HOST = "db"
+DB_HOST = "localhost"
 DB_NAME = "music_compositions"
 DB_USER = "postgres"
-DB_PASS = "goti"  # Change in production
+DB_PASS = "virus"  # Change in production
 
 def get_db_connection():
     conn = psycopg2.connect(

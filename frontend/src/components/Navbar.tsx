@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
 
   return (
     <AuthProvider>
-      <nav className="bg-gray-50 text-gray-900 px-3 py-3 flex justify-between items-center border-b border-gray-200 sticky top-0 z-[1000]">
+      <nav className="bg-gray-50 text-gray-900 px-3 py-3 flex justify-between items-center border-b border-gray-200 sticky top-0 z-1000">
       <h1 className="text-xl font-medium text-gray-800">SwarLipi</h1>
       {isAuthenticated && (
         <div className="flex items-center gap-4">

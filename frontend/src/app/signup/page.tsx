@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-const BACKEND_URL = 'http://127.0.0.1:5000'; // Replace with your actual backend URL
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
 
 const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -55,7 +54,7 @@ const Signup: React.FC = () => {
             </div>
           )}
 
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md shadow-xs -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
@@ -64,7 +63,7 @@ const Signup: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +78,7 @@ const Signup: React.FC = () => {
                 type="text"
                 autoComplete="username"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -94,7 +93,7 @@ const Signup: React.FC = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -105,7 +104,7 @@ const Signup: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               Sign up
             </button>

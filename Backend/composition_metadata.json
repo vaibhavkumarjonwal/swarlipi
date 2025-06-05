@@ -1,15 +1,15 @@
 {
-    "raag_name": "Bilawal",
-    "taal_name": "Dhamaar",
-    "lay": "vilambit",
+    "raag_name": "test",
+    "taal_name": "Teentaal",
+    "lay": "madhya",
     "source": {
-        "name": "hindustani-sangeet-paddhati-kramik-pustak-malika-part-2",
-        "page": 120
+        "name": "126",
+        "page": 126
     },
-    "first_row": 2,
-    "last_row": 35,
+    "first_row": 3,
+    "last_row": 25,
     "sthayee": {
-        "sam_beat": "5"
+        "sam_beat": "1"
     },
     "antara": {
         "sam_beat": "1"

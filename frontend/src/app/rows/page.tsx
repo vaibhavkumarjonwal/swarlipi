@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
 interface RowItem {
   id: string;
   selected: boolean;
@@ -36,6 +35,7 @@ interface FinalRowsData {
   Aabhog: { row: number, sam_beat: string }[];
   row_paths: string[];
 }
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
 
 const Rows: React.FC = () => {
   const router = useRouter();
@@ -174,7 +174,7 @@ const Rows: React.FC = () => {
       const imageUrls = await Promise.all(
         rowImages.map(async (filename) => {
           try {
-            const imageResponse = await fetch(`http://127.0.0.1:5000/image/${filename}`);
+            const imageResponse = await fetch(`${BACKEND_URL}/image/${filename}`);
             if (!imageResponse.ok) throw new Error(`Failed to fetch image: ${filename}`);
             const blob = await imageResponse.blob();
             return {
@@ -254,7 +254,7 @@ const Rows: React.FC = () => {
         })
         .filter(num => num !== -1);
       
-      const response = await fetch('http://127.0.0.1:5000/update_sam_taali', {
+      const response = await fetch(`${BACKEND_URL}/update_sam_taali`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -370,7 +370,7 @@ const Rows: React.FC = () => {
       }
   
       // Send data to server endpoint
-      const response = await fetch('http://127.0.0.1:5000/final_rows', {
+      const response = await fetch(`${BACKEND_URL}/final_rows`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
