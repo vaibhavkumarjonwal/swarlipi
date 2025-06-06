@@ -5,7 +5,7 @@ interface ImageInfo {
   url: string;
   filename: string;
 }
-const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:5000' // Replace with your actual backend URL
+const BACKEND_URL = process.env.BACKEND_URL || 'http://164.52.205.176:5000' // Replace with your actual backend URL
 
 interface FormData {
   raag: string;

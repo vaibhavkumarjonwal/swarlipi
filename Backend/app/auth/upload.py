@@ -29,7 +29,7 @@ def upload_pdf():
             "message": "File uploaded successfully",
             "file_path": upload_folder,
         }), 200)
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response.headers['Access-Control-Allow-Origin'] = 'http://164.52.205.176:3000'
         response.headers['Access-Control-Allow-Credentials'] = 'true'
         return response
 

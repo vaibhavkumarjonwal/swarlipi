@@ -2,10 +2,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext'; // Adjust path as necessary
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
- 
- // Replace with your actual backend URL
-console.log(BACKEND_URL)
+const BACKEND_URL = process.env.BACKEND_URL || 'http://164.52.205.176:5000' // Replace with your actual backend URL
+
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

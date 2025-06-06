@@ -27,7 +27,7 @@ app.config['TIMEOUT'] = 500
 
 # CORS configuration
 CORS(app,
-     #origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+     #origins=["http://localhost:3000", "http://164.52.205.176:3000"],
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
      expose_headers=["Set-Cookie"],
@@ -66,3 +66,32 @@ app.register_blueprint(get_kern_data_blueprint)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
+@app.route('/', methods=['GET'])
+def home():
+    return {"message": "Backend is working!", "status": "success"}
+
+@app.route('/test', methods=['GET'])
+def test():
+    return {"message": "Test endpoint working!"}
+
+@app.route('/debug/routes', methods=['GET'])
+def list_routes():
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods) - {'HEAD', 'OPTIONS'},
+            'rule': str(rule)
+        })
+    return jsonify({"routes": routes})
+
+from app.auth.login import login_blueprint
+print("Login blueprint imported successfully:", login_blueprint)
+
+# ... rest of your imports ...
+
+# After registering blueprints, add:
+print("All blueprints registered")
+for rule in app.url_map.iter_rules():
+    if 'login' in str(rule):
+        print(f"Login route found: {rule}")
