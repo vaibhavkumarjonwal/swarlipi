@@ -35,7 +35,7 @@ interface FinalRowsData {
   Aabhog: { row: number, sam_beat: string }[];
   row_paths: string[];
 }
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://164.52.205.176/:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://164.52.205.176:5000';
 
 const Rows: React.FC = () => {
   const router = useRouter();

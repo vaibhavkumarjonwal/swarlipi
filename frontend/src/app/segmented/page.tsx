@@ -39,7 +39,7 @@ interface ImageInfo {
   filename: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://164.52.205.176/:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://164.52.205.176:5000';
 
 const Segmented: React.FC = () => {
   const router = useRouter();
