@@ -1,20 +1,11 @@
 {
-    "raag_name": "sdf",
-    "taal_name": "Teentaal",
-    "lay": "madhya",
+    "raag_name": "bilawal",
+    "taal_name": "Dhamaar",
+    "lay": "vilambit",
     "source": {
-        "name": "dsfsf",
-        "page": 1222
+        "name": "bhatkhande-hindustani-sangeet-paddhati-kramik-pustak-malika-part-2",
+        "page": 120
     },
     "first_row": 3,
-    "last_row": 31,
-    "sthayee": {
-        "sam_beat": "9"
-    },
-    "antara": {
-        "sam_beat": "9"
-    },
-    "sanchari": {
-        "sam_beat": "9"
-    }
+    "last_row": 35
 }
