@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import WorkflowProgress from '@/components/WorkflowProgress';
+import { NotesIcon, ProcessIcon, TrebleClefIcon, StaffLinesIcon, RagaIcon } from '@/components/icons/MusicalIcons';
 
 interface PredictionData {
   metadata: {
@@ -51,6 +53,52 @@ const Segmented: React.FC = () => {
   const [imageCache, setImageCache] = useState<{[key: string]: ImageInfo}>({});
   const [rowImages, setRowImages] = useState<ImageInfo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const fetchImage = async (filename: string): Promise<ImageInfo | null> => {
+    if (imageCache[filename]) return imageCache[filename];
+    if (!filename || filename.trim() === '') {
+      console.warn('Empty filename provided to fetchImage');
+      return null;
+    }
+    
+    try {
+      const imageResponse = await fetch(`${BACKEND_URL}/fetch_image/${encodeURIComponent(filename)}`);
+      if (!imageResponse.ok) {
+        console.error(`Failed to fetch image: ${filename} - Status: ${imageResponse.status}`);
+        throw new Error(`Failed to fetch image: ${filename}`);
+      }
+      
+      const blob = await imageResponse.blob();
+      const imageInfo = {
+        url: URL.createObjectURL(blob),
+        filename: filename,
+      };
+      
+      setImageCache(prev => ({ ...prev, [filename]: imageInfo }));
+      return imageInfo;
+    } catch (error) {
+      console.error(`Error fetching image ${filename}:`, error);
+      return null;
+    }
+  };
+
+  const fetchImages = async (imagePaths: string[]): Promise<ImageInfo[]> => {
+    try {
+      const validPaths = imagePaths.filter(path => path && path.trim() !== '');
+      const sortedPaths = [...validPaths].sort((a, b) => {
+        const numA = parseInt(a.match(/R(\d+)\.png$/)?.[1] || '0', 10);
+        const numB = parseInt(b.match(/R(\d+)\.png$/)?.[1] || '0', 10);
+        return numA - numB;
+      });
+
+      const imagePromises = sortedPaths.map(filename => fetchImage(filename));
+      const imageInfos = await Promise.all(imagePromises);
+      return imageInfos.filter((img): img is ImageInfo => img !== null);
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const initialize = async () => {
@@ -132,58 +180,63 @@ const Segmented: React.FC = () => {
     
     initialize();
   }, []);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-musical">
+          <div className="animate-spin w-12 h-12 border-4 border-saffron border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-xl text-indigo-blue font-musical">खंडीकरण लोड कर रहे हैं...</p>
+          <p className="text-gray-600 mt-2">Loading segmented data...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const fetchImage = async (filename: string): Promise<ImageInfo | null> => {
-    if (imageCache[filename]) return imageCache[filename];
-    if (!filename || filename.trim() === '') {
-      console.warn('Empty filename provided to fetchImage');
-      return null;
-    }
-    
-    try {
-      const imageResponse = await fetch(`${BACKEND_URL}/fetch_image/${encodeURIComponent(filename)}`);
-      if (!imageResponse.ok) {
-        console.error(`Failed to fetch image: ${filename} - Status: ${imageResponse.status}`);
-        throw new Error(`Failed to fetch image: ${filename}`);
-      }
-      
-      const blob = await imageResponse.blob();
-      const imageInfo = {
-        url: URL.createObjectURL(blob),
-        filename: filename,
-      };
-      
-      setImageCache(prev => ({ ...prev, [filename]: imageInfo }));
-      return imageInfo;
-    } catch (error) {
-      console.error(`Error fetching image ${filename}:`, error);
-      return null;
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-musical max-w-md mx-4">
+          <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <TrebleClefIcon className="text-red-600" size={32} />
+          </div>
+          <h2 className="text-2xl font-display font-bold text-red-600 mb-4">Error Loading Data</h2>
+          <p className="text-gray-700 mb-6">{error}</p>
+          <button
+            onClick={() => router.push('/upload')}
+            className="px-6 py-3 bg-gradient-indian text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
+          >
+            Return to Upload
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const fetchImages = async (imagePaths: string[]): Promise<ImageInfo[]> => {
-    try {
-      const validPaths = imagePaths.filter(path => path && path.trim() !== '');
-      const sortedPaths = [...validPaths].sort((a, b) => {
-        const numA = parseInt(a.match(/R(\d+)\.png$/)?.[1] || '0', 10);
-        const numB = parseInt(b.match(/R(\d+)\.png$/)?.[1] || '0', 10);
-        return numA - numB;
-      });
-
-      const imagePromises = sortedPaths.map(filename => fetchImage(filename));
-      const imageInfos = await Promise.all(imagePromises);
-      return imageInfos.filter((img): img is ImageInfo => img !== null);
-    } catch (error) {
-      console.error('Error fetching images:', error);
-      return [];
-    }
-  };
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-musical max-w-md mx-4">
+          <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <StaffLinesIcon className="text-gray-600" size={32} />
+          </div>
+          <h2 className="text-2xl font-display font-bold text-gray-700 mb-4">No Data Available</h2>
+          <p className="text-gray-600 mb-6">No segmented data found. Please start from the upload step.</p>
+          <button
+            onClick={() => router.push('/upload')}
+            className="px-6 py-3 bg-gradient-indian text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
+          >
+            Start New Upload
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleFinalSubmit = async () => {
     try {
       setIsSubmitting(true);
       
-      // Use edited data if in edit mode, otherwise use original data
       const predictionsToSubmit = editMode ? editedData : data?.predictions;
       
       if (!predictionsToSubmit) {
@@ -278,46 +331,6 @@ const Segmented: React.FC = () => {
     });
   };
 
-  const validateMeendPairs = () => {
-    if (!editedData) return { isValid: false, message: 'No data to validate' };
-    
-    let isValid = true;
-    let errorMessage = '';
-    
-    Object.keys(editedData.predictions).forEach(subgroupKey => {
-      const meendList = editedData.predictions[subgroupKey].meend;
-      let startIndices: number[] = [];
-      let endIndices: number[] = [];
-      
-      for (let i = 0; i < meendList.length; i++) {
-        if (meendList[i] === 'S') startIndices.push(i);
-        if (meendList[i] === 'E') endIndices.push(i);
-      }
-      
-      if (startIndices.length !== endIndices.length) {
-        isValid = false;
-        errorMessage = `In ${subgroupKey}: Unequal number of Start (${startIndices.length}) and End (${endIndices.length}) markers`;
-        return;
-      }
-      
-      for (let i = 0; i < startIndices.length; i++) {
-        if (startIndices[i] >= endIndices[i]) {
-          isValid = false;
-          errorMessage = `In ${subgroupKey}: End marker must come after its corresponding Start marker`;
-          return;
-        }
-        
-        if (i > 0 && startIndices[i] < endIndices[i-1]) {
-          isValid = false;
-          errorMessage = `In ${subgroupKey}: Overlapping meend pairs detected`;
-          return;
-        }
-      }
-    });
-    
-    return { isValid, message: errorMessage };
-  };
-
   const handlePredictionChange = (
     subgroupKey: string,
     type: 'kann_swar' | 'swar' | 'meend',
@@ -348,37 +361,27 @@ const Segmented: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      const { isValid, message } = validateMeendPairs();
-      if (!isValid) {
-        alert(`Meend validation failed: ${message}`);
-        return;
-      }
-      
       if (!editedData || !data) {
         throw new Error('No data to save');
       }
 
-      // Update the data with edited values first
       const updatedData = {
         ...data,
         predictions: editedData
       };
 
-      // Prepare the data to be sent to final_save
       const postData = {
         predictions: editedData,
         subgroups: data.subgroups,
         row_paths: data.row_paths
       };
 
-      // Save to localStorage if needed
       try {
         localStorage.setItem('segmentedFinalData', JSON.stringify(postData));
       } catch (e) {
         console.warn('LocalStorage is full, falling back to server storage');
       }
 
-      // Post directly to final_save
       const response = await fetch(`${BACKEND_URL}/final_save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -389,12 +392,10 @@ const Segmented: React.FC = () => {
       
       const responseData = await response.json();
       
-      // Update local state with the new data
       setData(updatedData);
       setEditedData(editedData);
       setEditMode(false);
       
-      // Store kern data and redirect
       localStorage.setItem('kernDisplayData', JSON.stringify(responseData.kern_data));
       router.push('/kern_display');
       
@@ -484,293 +485,425 @@ const Segmented: React.FC = () => {
     return arr[0] || '';
   };
 
-  if (loading) return <div className="loading text-center py-10 text-lg">Loading prediction data...</div>;
-  if (error) return <div className="error text-center py-10 text-lg text-red-600">{error}</div>;
-  if (!data) return <div className="error text-center py-10 text-lg text-red-600">No data available</div>;
-
   const subgroupKeys = Object.keys(data.subgroups).sort((a, b) => {
     const getStartNum = (key: string) => parseInt(key.match(/subgroup_(\d+)_\d+/)?.[1] || '0', 10);
     return getStartNum(a) - getStartNum(b);
   });
   
   return (
-    <div className="segmented-container max-w-(--breakpoint-2xl) mx-auto px-4 py-12 h-[90vh]">
-      <h1 className="text-2xl font-bold text-center mb-6">Predictions</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-amber-50 pb-8">
+      {/* Header */}
       
-      <div className="main-layout h-full flex flex-col lg:flex-row gap-4 border border-gray-200 rounded-lg">
-        <div className='flex flex-col lg:w-3/5 '>
-          <div className="prediction-content flex-1 lg:w-full overflow-x-auto p-4 ">
-            {subgroupKeys.map(subgroupKey => (
-              <div key={subgroupKey} className="subgroup-section mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-300">{subgroupKey}</h2>
-                
-                <div className='flex flex-col overflow-x-scroll '>
-                  <div className="prediction-row flex flex-col mb-6 ">
-                    <div className="row-label font-medium mb-2 flex justify-between items-center ">
-                      <span>Kann Swar</span>
-                      {editMode && (
-                        <button 
-                          onClick={() => handleAddCell(subgroupKey, 'kann_swar')}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                        >
-                          + Add Cell
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="cells-container flex gap-3 pb-2 pr-5">
-                      {data.subgroups[subgroupKey].kann_swar_list.map((imagePaths, idx) => (
-                        <React.Fragment key={`${subgroupKey}-kann-swar-${idx}`}>
-                          {editMode && (
-                            <button 
-                              onClick={() => handleAddCell(subgroupKey, 'kann_swar', idx)}
-                              className="add-cell-before bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center self-center transition-colors"
-                              title="Add cell before"
-                            >
-                              +
-                            </button>
-                          )}
-                          <div className="cell-group flex flex-col items-center min-w-[80px] relative">
-                            {editMode && (
-                              <button
-                                onClick={() => handleDeleteCell(subgroupKey, 'kann_swar', idx)}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10 hover:bg-red-600 transition-colors"
-                                title="Delete cell"
-                              >
-                                ×
-                              </button>
-                            )}
 
-                            <div className={`image-container flex justify-center items-center w-full h-16 bg-gray-200 rounded ${
-                              hasData(subgroupKey, 'kann_swar', idx) ? 'ring-2 ring-blue-500' : ''
-                            }`}>
-                              {imagePaths.length > 0 ? (
-                                <ImageCell 
-                                  key={`${subgroupKey}-kann-swar-${idx}-images`}
-                                  imagePaths={imagePaths}
-                                  fetchImage={fetchImage}
-                                  hasData={hasData(subgroupKey, 'kann_swar', idx)}
-                                />
-                              ) : (
-                                <div className="text-xs text-gray-500">No image</div>
-                              )}
-                            </div>
-                            
-                            <div className="prediction-text mt-1 w-full text-center text-base ">
-                              {editMode ? (
-                                <input
-                                  type="text"
-                                  value={Array.isArray(editedData?.predictions[subgroupKey]?.kann_swar[idx]) 
-                                    ? editedData?.predictions[subgroupKey]?.kann_swar[idx].join(' ') 
-                                    : editedData?.predictions[subgroupKey]?.kann_swar[idx] || ''}
-                                  onChange={(e) => {
-                                    setEditedData(prevData => {
-                                      if (!prevData) return null;
-                                      const newData = {...prevData};
-                                      newData.predictions[subgroupKey].kann_swar[idx] = [e.target.value];
-                                      return newData;
-                                    });
-                                  }}
-                                  onBlur={(e) => handlePredictionChange(
-                                    subgroupKey,
-                                    'kann_swar',
-                                    idx,
-                                    e.target.value
-                                  )}
-                                  className="edit-input w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                                />
-                              ) : (
-                                arrayToDisplayString(
-                                  data.predictions.predictions[subgroupKey]?.kann_swar[idx],
-                                  'kann_swar'
-                                )
-                              )}
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
+      <div className="max-w-7xl mx-auto px-6 py-8 pb-16">
+        {/* Translation Progress Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-display font-bold text-slate-800 mb-2">
+            Musical Segmentation
+          </h1>
+          <p className="text-lg text-slate-600">
+            Track your document's journey from PDF to Western notation
+          </p>
+        </div>
 
-                  <div className="prediction-row flex flex-col  ">
-                    <div className="row-label font-medium mb-2 flex justify-between items-center">
-                      <span>Swar</span>
-                      {editMode && (
-                        <button 
-                          onClick={() => handleAddCell(subgroupKey, 'swar')}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                        >
-                          + Add Cell
-                        </button>
-                      )}
-                    </div>
-                    <div className="cells-container flex gap-3 pb-2 pr-5">
-                      {data.subgroups[subgroupKey].swar_list.map((imagePaths, idx) => (
-                        <React.Fragment key={`${subgroupKey}-swar-${idx}`}>
-                          {editMode && (
-                            <button 
-                              onClick={() => handleAddCell(subgroupKey, 'swar', idx)}
-                              className="add-cell-before bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center self-center transition-colors"
-                              title="Add cell before"
-                            >
-                              +
-                            </button>
-                          )}
-                          <div className="cell-group flex flex-col items-center min-w-[80px] relative">
-                            {editMode && (
-                              <button
-                                onClick={() => handleDeleteCell(subgroupKey, 'swar', idx)}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10 hover:bg-red-600 transition-colors"
-                                title="Delete cell"
-                              >
-                                ×
-                              </button>
-                            )}
-                            <div className={`image-container flex justify-center items-center w-full h-16 bg-gray-200 rounded ${
-                              hasData(subgroupKey, 'swar', idx) ? 'ring-2 ring-blue-500' : ''
-                            }`}>
-                              {imagePaths.length > 0 ? (
-                                <ImageCell 
-                                  key={`${subgroupKey}-swar-${idx}-images`}
-                                  imagePaths={imagePaths}
-                                  fetchImage={fetchImage}
-                                  hasData={hasData(subgroupKey, 'swar', idx)}
-                                />
-                              ) : (
-                                <div className="text-xs text-gray-500">No image</div>
-                              )}
-                            </div>
-                            
-                            <div className="prediction-text mt-1 w-full text-center text-base">
-                              {editMode ? (
-                                <input
-                                  type="text"
-                                  value={Array.isArray(editedData?.predictions[subgroupKey]?.swar[idx]) 
-                                    ? editedData?.predictions[subgroupKey]?.swar[idx].join(' ') 
-                                    : editedData?.predictions[subgroupKey]?.swar[idx] || ''}
-                                  onChange={(e) => {
-                                    setEditedData(prevData => {
-                                      if (!prevData) return null;
-                                      const newData = {...prevData};
-                                      newData.predictions[subgroupKey].swar[idx] = [e.target.value];
-                                      return newData;
-                                    });
-                                  }}
-                                  onBlur={(e) => handlePredictionChange(
-                                    subgroupKey,
-                                    'swar',
-                                    idx,
-                                    e.target.value
-                                  )}
-                                  className="edit-input w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                                />
-                              ) : (
-                                arrayToDisplayString(
-                                  data.predictions.predictions[subgroupKey]?.swar[idx],
-                                  'swar'
-                                )
-                              )}
-                            </div>
-                            
-                            <div className="meend-indicators mt-1 flex gap-2 text-base">
-                              {editMode ? (
-                                <div className="meend-edit-controls flex gap-2">
-                                  <label className="flex items-center gap-1">
-                                    <input
-                                      type="checkbox"
-                                      checked={editedData?.predictions[subgroupKey]?.meend[idx] === 'S'}
-                                      onChange={(e) => handleMeendChange(subgroupKey, idx, e.target.checked ? 'S' : '')}
-                                      className="h-4 w-4" 
-                                    />
-                                    S
-                                  </label>
-                                  <label className="flex items-center gap-1">
-                                    <input
-                                      type="checkbox"
-                                      checked={editedData?.predictions[subgroupKey]?.meend[idx] === 'E'}
-                                      onChange={(e) => handleMeendChange(subgroupKey, idx, e.target.checked ? 'E' : '')}
-                                      className="h-4 w-4"
-                                    />
-                                    E
-                                  </label>
-                                </div>
-                              ) : (
-                                <div className="meend-display flex gap-1">
-                                  {data.predictions.predictions[subgroupKey]?.meend[idx] === 'S' && (
-                                    <span className="meend-start text-green-600 font-medium">S</span> 
-                                  )}
-                                  {data.predictions.predictions[subgroupKey]?.meend[idx] === 'E' && (
-                                    <span className="meend-end text-red-600 font-medium">E</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
+        {/* Workflow Progress */}
+        <WorkflowProgress currentStep="segmented" />
+
+        {/* Instructions Card */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-musical p-6 mb-8 border border-amber-200">
+          <div className="flex items-start space-x-4">
+            <div className="bg-gradient-indian p-3 rounded-lg">
+              <NotesIcon className="text-white" size={24} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-display font-bold text-indigo-blue mb-2">
+                Step 3: Review & Edit Predictions
+              </h2>
+              <p className="text-gray-700 mb-4">
+                AI has analyzed and segmented your musical notation. Review the predictions and make corrections if needed.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="font-semibold text-blue-800">Kann Swar</p>
+                  <p className="text-blue-600">Ornamental notes</p>
+                </div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="font-semibold text-green-800">Swar</p>
+                  <p className="text-green-600">Main musical notes</p>
+                </div>
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <p className="font-semibold text-purple-800">Meend</p>
+                  <p className="text-purple-600">Glide markings (S/E)</p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
-        
-        <div className="row-panel h-full lg:w-2/5 bg-white border-l border-gray-200 p-4 overflow-y-auto max-h-screen">
-          <h3 className="font-semibold mb-4 text-lg">Row Images</h3>
-          {rowImages.length > 0 ? (
-            <div className="row-images-list space-y-4">
-              {rowImages.map((imgInfo, index) => (
-                <div key={`row-${index}`} className="row-display flex items-center gap-4 border-b border-gray-100 pb-4">
-                  <span className="row-label text-base font-medium w-16">Row {index+1}</span>
-                  <img 
-                    src={imgInfo.url} 
-                    alt={`Row ${index+1}`} 
-                    className="row-image max-h-24 object-contain" 
-                  />
+
+        {/* Main Content */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-musical overflow-hidden">
+          <div className="flex flex-col lg:flex-row">
+            {/* Predictions Panel */}
+            <div className="flex-1 lg:w-1/2 overflow-hidden flex flex-col">
+              <div className="bg-gradient-indian p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-display font-bold text-white mb-1">Musical Predictions</h3>
+                    <p className="text-white/90">AI-generated notation analysis</p>
+                  </div>
+                  {!editMode && (
+                    <button 
+                      onClick={() => setEditMode(true)}
+                      className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 transition-all duration-200"
+                    >
+                      <ProcessIcon className="inline mr-2" size={16} />
+                      Edit Mode
+                    </button>
+                  )}
                 </div>
-              ))}
+              </div>
+
+              <div className="overflow-y-auto p-6 space-y-6" style={{ maxHeight: '60vh' }}>
+                {subgroupKeys.map(subgroupKey => (
+                  <div key={subgroupKey} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-gradient-to-r from-amber-50 to-blue-50 p-4 border-b border-gray-200">
+                      <h4 className="text-lg font-display font-bold text-indigo-blue">{subgroupKey}</h4>
+                    </div>
+                    
+                    <div className="p-4">
+                      {/* Single horizontal scroller for both Kann Swar and Swar */}
+                      <div className="overflow-x-auto pb-4">
+                        <div className="space-y-6">
+                          {/* Kann Swar Row */}
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-semibold text-blue-800 bg-blue-50 px-3 py-1 rounded-full">
+                                Kann Swar (कण स्वर)
+                              </span>
+                              {editMode && (
+                                <button 
+                                  onClick={() => handleAddCell(subgroupKey, 'kann_swar')}
+                                  className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition-colors"
+                                >
+                                  + Add Cell
+                                </button>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-3 pb-2">
+                          {data.subgroups[subgroupKey].kann_swar_list.map((imagePaths, idx) => (
+                            <React.Fragment key={`${subgroupKey}-kann-swar-${idx}`}>
+                              {editMode && (
+                                <button 
+                                  onClick={() => handleAddCell(subgroupKey, 'kann_swar', idx)}
+                                  className="flex-shrink-0 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center self-center transition-colors"
+                                  title="Add cell before"
+                                >
+                                  +
+                                </button>
+                              )}
+
+                              <div className="flex-shrink-0 bg-white border-2 border-gray-200 rounded-lg p-3 min-w-[100px] hover:border-blue-300 transition-colors">
+                                {editMode && (
+                                  <button
+                                    onClick={() => handleDeleteCell(subgroupKey, 'kann_swar', idx)}
+                                    className="float-right bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors mb-2"
+                                    title="Delete cell"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+
+                                <div className={`h-16 bg-gray-50 rounded flex items-center justify-center mb-2 ${
+                                  hasData(subgroupKey, 'kann_swar', idx) ? 'ring-2 ring-blue-400' : ''
+                                }`}>
+                                  {imagePaths.length > 0 ? (
+                                    <ImageCell 
+                                      key={`${subgroupKey}-kann-swar-${idx}-images`}
+                                      imagePaths={imagePaths}
+                                      fetchImage={fetchImage}
+                                      hasData={hasData(subgroupKey, 'kann_swar', idx)}
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-gray-400">No image</div>
+                                  )}
+                                </div>
+                                
+                                <div className="text-center text-sm">
+                                  {editMode ? (
+                                    <input
+                                      type="text"
+                                      value={Array.isArray(editedData?.predictions[subgroupKey]?.kann_swar[idx]) 
+                                        ? editedData?.predictions[subgroupKey]?.kann_swar[idx].join(' ') 
+                                        : editedData?.predictions[subgroupKey]?.kann_swar[idx] || ''}
+                                      onChange={(e) => {
+                                        setEditedData(prevData => {
+                                          if (!prevData) return null;
+                                          const newData = {...prevData};
+                                          newData.predictions[subgroupKey].kann_swar[idx] = [e.target.value];
+                                          return newData;
+                                        });
+                                      }}
+                                      onBlur={(e) => handlePredictionChange(
+                                        subgroupKey,
+                                        'kann_swar',
+                                        idx,
+                                        e.target.value
+                                      )}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                      placeholder="कण स्वर"
+                                    />
+                                  ) : (
+                                    <span className="text-blue-700 font-medium">
+                                      {arrayToDisplayString(
+                                        data.predictions.predictions[subgroupKey]?.kann_swar[idx],
+                                        'kann_swar'
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Swar Row */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-green-800 bg-green-50 px-3 py-1 rounded-full">
+                            Swar (स्वर)
+                          </span>
+                          {editMode && (
+                            <button 
+                              onClick={() => handleAddCell(subgroupKey, 'swar')}
+                              className="text-xs bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-colors"
+                            >
+                              + Add Cell
+                            </button>
+                          )}
+                        </div>                            <div className="flex gap-3 pb-2">
+                          {data.subgroups[subgroupKey].swar_list.map((imagePaths, idx) => (
+                            <React.Fragment key={`${subgroupKey}-swar-${idx}`}>
+                              {editMode && (
+                                <button 
+                                  onClick={() => handleAddCell(subgroupKey, 'swar', idx)}
+                                  className="flex-shrink-0 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center self-center transition-colors"
+                                  title="Add cell before"
+                                >
+                                  +
+                                </button>
+                              )}
+
+                              <div className="flex-shrink-0 bg-white border-2 border-gray-200 rounded-lg p-3 min-w-[100px] hover:border-green-300 transition-colors">
+                                {editMode && (
+                                  <button
+                                    onClick={() => handleDeleteCell(subgroupKey, 'swar', idx)}
+                                    className="float-right bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors mb-2"
+                                    title="Delete cell"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+
+                                <div className={`h-16 bg-gray-50 rounded flex items-center justify-center mb-2 ${
+                                  hasData(subgroupKey, 'swar', idx) ? 'ring-2 ring-green-400' : ''
+                                }`}>
+                                  {imagePaths.length > 0 ? (
+                                    <ImageCell 
+                                      key={`${subgroupKey}-swar-${idx}-images`}
+                                      imagePaths={imagePaths}
+                                      fetchImage={fetchImage}
+                                      hasData={hasData(subgroupKey, 'swar', idx)}
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-gray-400">No image</div>
+                                  )}
+                                </div>
+                                
+                                <div className="text-center text-sm mb-2">
+                                  {editMode ? (
+                                    <input
+                                      type="text"
+                                      value={Array.isArray(editedData?.predictions[subgroupKey]?.swar[idx]) 
+                                        ? editedData?.predictions[subgroupKey]?.swar[idx].join(' ') 
+                                        : editedData?.predictions[subgroupKey]?.swar[idx] || ''}
+                                      onChange={(e) => {
+                                        setEditedData(prevData => {
+                                          if (!prevData) return null;
+                                          const newData = {...prevData};
+                                          newData.predictions[subgroupKey].swar[idx] = [e.target.value];
+                                          return newData;
+                                        });
+                                      }}
+                                      onBlur={(e) => handlePredictionChange(
+                                        subgroupKey,
+                                        'swar',
+                                        idx,
+                                        e.target.value
+                                      )}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                                      placeholder="स्वर"
+                                    />
+                                  ) : (
+                                    <span className="text-green-700 font-medium">
+                                      {arrayToDisplayString(
+                                        data.predictions.predictions[subgroupKey]?.swar[idx],
+                                        'swar'
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Meend Indicators */}
+                                <div className="flex justify-center gap-2 text-xs">
+                                  {editMode ? (
+                                    <div className="flex gap-2">
+                                      <label className="flex items-center gap-1 cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={editedData?.predictions[subgroupKey]?.meend[idx] === 'S'}
+                                          onChange={(e) => handleMeendChange(subgroupKey, idx, e.target.checked ? 'S' : '')}
+                                          className="w-3 h-3 text-green-600" 
+                                        />
+                                        <span className="text-green-600 font-bold">S</span>
+                                      </label>
+                                      <label className="flex items-center gap-1 cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={editedData?.predictions[subgroupKey]?.meend[idx] === 'E'}
+                                          onChange={(e) => handleMeendChange(subgroupKey, idx, e.target.checked ? 'E' : '')}
+                                          className="w-3 h-3 text-red-600"
+                                        />
+                                        <span className="text-red-600 font-bold">E</span>
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <div className="flex gap-1">
+                                      {data.predictions.predictions[subgroupKey]?.meend[idx] === 'S' && (
+                                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">S</span> 
+                                      )}
+                                      {data.predictions.predictions[subgroupKey]?.meend[idx] === 'E' && (
+                                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold">E</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+            
+            {/* Row Images Panel */}
+            <div className="lg:w-1/2 bg-gray-50 border-l border-gray-200 flex flex-col">
+              <div className="bg-gradient-western p-6">
+                <h3 className="text-xl font-display font-bold text-white mb-1">Original Rows</h3>
+                <p className="text-white/90">Source notation images</p>
+              </div>
+              
+              <div className="overflow-y-auto p-6" style={{ maxHeight: '60vh' }}>
+                {rowImages.length > 0 ? (
+                  <div className="space-y-4">
+                    {rowImages.map((imgInfo, index) => (
+                      <div key={`row-${index}`} className="bg-white rounded-lg p-4 border border-gray-200 hover:border-amber-300 transition-colors">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded-full min-w-fit flex-shrink-0">
+                            Row {index + 1}
+                          </span>
+                          <img 
+                            src={imgInfo.url} 
+                            alt={`Row ${index + 1}`} 
+                            className="max-h-32 flex-1 object-contain rounded border border-gray-200 min-w-0" 
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <StaffLinesIcon className="text-gray-400 mx-auto mb-4" size={48} />
+                    <p className="text-gray-500 font-medium">No row images available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-6 mt-8 mb-12">
+          {editMode ? (
+            <>
+              <button 
+                onClick={handleCancel}
+                className="px-8 py-3 bg-white border-2 border-red-300 text-red-700 rounded-lg font-medium hover:border-red-400 hover:shadow-md transition-all duration-200"
+              >
+                Cancel Changes
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                <ProcessIcon className="inline mr-2" size={18} />
+                Save Changes
+              </button>
+            </>
           ) : (
-            <div className="row-placeholder text-gray-500 italic text-base">No row data available</div> 
+            <>
+              <button 
+                onClick={() => router.back()}
+                className="px-8 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:border-gray-400 hover:shadow-md transition-all duration-200"
+              >
+                ← Previous Step
+              </button>
+              <button 
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-gradient-musical text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <>
+                    <NotesIcon className="inline mr-2" size={18} />
+                    Generate Western Notation
+                  </>
+                )}
+              </button>
+            </>
           )}
         </div>
       </div>
-      
-      <div className="button-group flex justify-center gap-4 mt-6 ">
-        {editMode ? (
-          <>
-            <button 
-              onClick={handleCancel}
-              className="cancel-button px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="save-button px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-            >
-              Save
-            </button>
-          </>
-        ) : (
-          <>
-            <button 
-              onClick={() => setEditMode(true)}
-              className="edit-button px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              Edit
-            </button>
-            <button 
-              onClick={handleFinalSubmit}
-              disabled={isSubmitting}
-              className="submit-button px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </button>
-          </>
-        )}
-      </div>
+
+      {/* Processing Overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md mx-4 text-center shadow-2xl">
+            <div className="bg-gradient-musical w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrebleClefIcon className="text-white animate-pulse" size={32} />
+            </div>
+            <h3 className="text-xl font-display font-bold text-indigo-blue mb-2">Converting to Western Notation</h3>
+            <p className="text-gray-600 mb-4">
+              Transforming Indian classical notation into Western musical format...
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-gradient-musical h-2 rounded-full animate-pulse" style={{width: '90%'}}></div>
+            </div>
+            <p className="text-sm text-gray-500 mt-3 font-musical">पाश्चात्य संगीत में परिवर्तन...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

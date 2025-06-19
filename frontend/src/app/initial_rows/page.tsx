@@ -1,11 +1,15 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import WorkflowProgress from '@/components/WorkflowProgress';
+import MetadataForm from '@/components/MetadataForm';
+
 interface ImageInfo {
   url: string;
   filename: string;
 }
-const BACKEND_URL = process.env.BACKEND_URL || 'http://164.52.205.176:5000' // Replace with your actual backend URL
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://164.52.205.176:5000';
 
 interface FormData {
   raag: string;
@@ -50,49 +54,6 @@ const InitialRows = () => {
     }
   }, [rowPaths]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-// In initialrows.tsx, modify the handleSave function:
-const handleSave = async () => {
-  const { raag, taal, laya, startRow, endRow } = formData;
-  
-  if (!raag || !taal || !laya || !startRow || !endRow) {
-    alert('Please fill in all mandatory fields: Raag, Taal, Laya, Start Row, and End Row.');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${BACKEND_URL}/update_initial_rows`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
-
-    const sam_taali_data = await response.json();
-    if (!response.ok) throw new Error(sam_taali_data.error || "Failed to get initial rows");
-
-    // Store the data in localStorage
-    localStorage.setItem('rowsData', JSON.stringify(sam_taali_data));
-    
-    // Navigate to rows page with data as query parameter
-    const queryParams = new URLSearchParams();
-    queryParams.set('data', JSON.stringify(sam_taali_data));
-    router.push(`/rows?${queryParams.toString()}`);
-
-  } catch (error) {
-    console.error('Error saving data:', error);
-    alert('Failed to save. Please try again.');
-  }
-};
-  
   const fetchImages = async (rowImages: string[]) => {
     try {
       setIsLoading(true);
@@ -133,154 +94,160 @@ const handleSave = async () => {
     }
   };
 
+  const handleSaveMetadata = async () => {
+    const { raag, taal, laya, startRow, endRow } = formData;
+    
+    if (!raag || !taal || !laya || !startRow || !endRow) {
+      alert('Please fill in all mandatory fields: Raag, Taal, Laya, Start Row, and End Row.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/update_initial_rows`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData)
+      });
+
+      const sam_taali_data = await response.json();
+      if (!response.ok) throw new Error(sam_taali_data.error || "Failed to get initial rows");
+
+      // Store the data in localStorage
+      localStorage.setItem('rowsData', JSON.stringify(sam_taali_data));
+      
+      // Navigate to rows page
+      router.push('/rows');
+
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (rowPaths.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[300px] text-center">
-        <p>No data available. Please upload a file first.</p>
-        <button 
-          onClick={() => router.push('/upload')} 
-          className="mt-2 underline text-blue-600"
-        >
-          Go to Upload
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">No Data Available</h2>
+          <p className="text-slate-600 mb-6">Please upload a file first to continue.</p>
+          <button 
+            onClick={() => router.push('/upload')} 
+            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium px-6 py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 transform hover:scale-105"
+          >
+            Go to Upload
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-5 max-w-[1200px] mx-auto">
-      <h2 className="text-2xl font-bold mb-5 text-center">Initial Rows</h2>
-      
-      <div className="flex gap-10 items-start">
-        {/* Left side - Form inputs */}
-        <div className="flex-1 max-w-[300px] pr-5 border-r border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="raag" className="font-medium min-w-[80px] mr-2">Raag*</label>
-            <input
-              type="text"
-              id="raag"
-              name="raag"
-              value={formData.raag}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm"
-            />
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="taal" className="font-medium min-w-[80px] mr-2">Taal*</label>
-            <select
-              id="taal"
-              name="taal"
-              value={formData.taal}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm appearance-none"
-            >
-              <option value="">Select Taal</option>
-              <option value="Rupak">Rupak</option>
-              <option value="Sultaal">Sultaal</option>
-              <option value="Chautaal">Chautaal</option>
-              <option value="Ada Chautaal">Ada Chautaal</option>
-              <option value="Jhoomra">Jhoomra</option>
-              <option value="Dhamaar">Dhamaar</option>
-              <option value="Deepchandi">Deepchandi</option>
-              <option value="Punjabi (Tilwada)">Punjabi (Tilwada)</option>
-              <option value="Dadra">Dadra</option>
-              <option value="Jhaptal">Jhaptal</option>
-              <option value="Ektaal">Ektaal</option>
-              <option value="Teentaal">Teentaal</option>
-            </select>
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="laya" className="font-medium min-w-[80px] mr-2">Laya*</label>
-            <select
-              id="laya"
-              name="laya"
-              value={formData.laya}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm appearance-none"
-            >
-              <option value="">Select Laya</option>
-              <option value="vilambit">Vilambit</option>
-              <option value="madhya">Madhyalaya</option>
-              <option value="drut">Drut</option>
-            </select>
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="source" className="font-medium min-w-[80px] mr-2">Source</label>
-            <input
-              type="text"
-              id="source"
-              name="source"
-              value={formData.source}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm"
-            />
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="pageNo" className="font-medium min-w-[80px] mr-2">Page No.</label>
-            <input
-              type="text"
-              id="pageNo"
-              name="pageNo"
-              value={formData.pageNo}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm"
-            />
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="startRow" className="font-medium min-w-[80px] mr-2">Start Row*</label>
-            <input
-              type="text"
-              id="startRow"
-              name="startRow"
-              value={formData.startRow}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm"
-            />
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <label htmlFor="endRow" className="font-medium min-w-[80px] mr-2">End Row*</label>
-            <input
-              type="text"
-              id="endRow"
-              name="endRow"
-              value={formData.endRow}
-              onChange={handleInputChange}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-100 text-sm"
-            />
-          </div>
-          
-          <button 
-            className="mt-5 px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full"
-            onClick={handleSave}
-          >
-            Save
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-display font-bold text-slate-800 mb-2">
+            Musical Analysis
+          </h1>
+          <p className="text-lg text-slate-600">
+            Review the segmented rows and provide musical context
+          </p>
         </div>
-        
-        {/* Right side - Images */}
-        <div className="flex-1 max-h-[80vh] overflow-y-auto">
-          {isLoading ? (
-            <p className="text-center py-5 text-gray-600">Loading images...</p>
-          ) : (
-            <div className="flex flex-col border-t border-gray-200 mb-1">
-              {images.map((image, index) => (
-                <div key={image.filename} className="flex items-center gap-2 border-b border-gray-200 py-2">
-                  <div className="font-medium min-w-[60px]">row_{index + 1}:</div>
-                  <img 
-                    src={image.url} 
-                    alt={`Row ${index + 1}`} 
-                    className="max-w-full h-auto bg-gray-100 rounded"
-                  />
-                </div>
-              ))}
+
+        {/* Workflow Progress */}
+        <WorkflowProgress currentStep="process" />
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Metadata Form */}
+          <div className="lg:col-span-1">
+            <MetadataForm
+              formData={formData}
+              onFormChange={setFormData}
+              onSubmit={handleSaveMetadata}
+              isLoading={isLoading}
+            />
+          </div>
+
+          {/* Right Column - Row Images */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-musical border border-orange-100">
+              <div className="p-6 border-b border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Segmented Rows ({images.length} detected)</span>
+                </h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  AI has identified and segmented individual musical lines from your PDF
+                </p>
+              </div>
+
+              <div className="p-6">
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-600 font-medium">Loading musical rows...</p>
+                    <p className="text-sm text-slate-500 mt-1">Processing your notation</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {images.map((image, index) => (
+                      <div
+                        key={image.filename}
+                        className="group border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 hover:border-orange-300"
+                      >
+                        <div className="bg-gradient-to-r from-slate-50 to-orange-50 px-4 py-2 border-b border-slate-200">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-slate-700">
+                              Row {index + 1}
+                            </span>
+                            <span className="text-xs text-slate-500 font-mono">
+                              {image.filename}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-white">
+                          <div className="relative overflow-hidden rounded-md bg-slate-50">
+                            <img
+                              src={image.url}
+                              alt={`Musical Row ${index + 1}`}
+                              className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {images.length === 0 && !isLoading && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-800 mb-2">No Rows Found</h3>
+                    <p className="text-slate-600">Unable to detect musical rows in the uploaded PDF.</p>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

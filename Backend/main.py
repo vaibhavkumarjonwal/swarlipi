@@ -18,6 +18,7 @@ from app.auth.final_save import final_save_blueprint
 from app.auth.save_kern import save_kern_blueprint
 from app.auth.get_segmented_data import get_segmented_data_blueprint
 from app.auth.get_kern_data import get_kern_data_blueprint
+from app.auth.clear_outputs import clear_outputs_blueprint
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'swar_lipi_app_2025'
@@ -27,7 +28,7 @@ app.config['TIMEOUT'] = 500
 
 # CORS configuration
 CORS(app,
-     #origins=["http://localhost:3000", "http://164.52.205.176:3000"],
+     origins=["http://localhost:3000", "http://164.52.205.176:3000"],
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
      expose_headers=["Set-Cookie"],
@@ -62,6 +63,7 @@ app.register_blueprint(final_save_blueprint)
 app.register_blueprint(save_kern_blueprint)
 app.register_blueprint(get_segmented_data_blueprint)
 app.register_blueprint(get_kern_data_blueprint)
+app.register_blueprint(clear_outputs_blueprint)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import TranslationProgress from '@/components/TranslationProgress';
 import { StaffLinesIcon, NotesIcon, ProcessIcon, TrebleClefIcon } from '@/components/icons/MusicalIcons';
 
 interface RowItem {
@@ -39,7 +38,7 @@ interface FinalRowsData {
   row_paths: string[];
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://164.52.205.176:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:5000';
 
 const Rows: React.FC = () => {
   const router = useRouter();
@@ -444,11 +443,6 @@ const Rows: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-blue-50">
-      {/* Translation Progress */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-orange-200">
-        <TranslationProgress currentStep="classify" />
-      </div>
-      
       {/* Header Section */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-orange-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-6">

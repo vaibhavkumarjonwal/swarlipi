@@ -1,10 +1,10 @@
 {
-    "raag_name": "bilawal",
-    "taal_name": "Dhamaar",
-    "lay": "vilambit",
+    "raag_name": "Asavari",
+    "taal_name": "Teentaal",
+    "lay": "Madhya",
     "source": {
         "name": "bhatkhande-hindustani-sangeet-paddhati-kramik-pustak-malika-part-2",
-        "page": 120
+        "page": 364
     },
     "first_row": 3,
     "last_row": 35,
@@ -12,6 +12,6 @@
         "sam_beat": "5"
     },
     "antara": {
-        "sam_beat": "1"
+        "sam_beat": "5"
     }
 }

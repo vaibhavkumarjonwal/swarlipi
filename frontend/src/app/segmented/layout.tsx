@@ -1,4 +1,3 @@
-import ProtectedRoute from "@/components/ProtectedRoute";
 export default function RootLayout({
   children,
 }: Readonly<{

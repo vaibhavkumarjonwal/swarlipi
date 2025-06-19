@@ -1,44 +1,245 @@
 @import 'tailwindcss';
-
-@theme {
-  --color-background: rgb(var(--background));
-  --color-foreground: rgb(var(--foreground));
-  --color-border: rgb(var(--border));
-
-  --radius: var(--radius);
-}
-
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Crimson+Text:wght@400;600&display=swap');
 
 @layer base {
   :root {
-    --background: 255 255 255; /* white */
-    --foreground: 23 23 23;    /* neutral-900 */
-    --border: 229 229 229;     /* neutral-200 */
-    --radius: 0.5rem;
+    --background: 255 253 250;
+    --foreground: 45 55 72;
+    --border: 229 229 229;
+    --radius: 0.75rem;
+    
+    /* Musical Color Palette */
+    --saffron: 255 153 51;
+    --deep-orange: 230 81 0;
+    --indigo-blue: 75 85 161;
+    --forest-green: 19 136 8;
+    --warm-white: 255 253 250;
+    --charcoal: 45 55 72;
+    --gold: 184 134 11;
+    --burgundy: 127 29 29;
+    --cream: 254 252 232;
   }
 
   * {
-    @apply border-border;
+    border-color: rgb(var(--border));
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background: linear-gradient(135deg, rgb(var(--warm-white)) 0%, rgb(var(--cream)) 100%);
+    color: rgb(var(--foreground));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* Custom utilities */
+.font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-musical {
+  font-family: 'Crimson Text', serif;
+}
+
+/* Musical animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}
+
+/* Musical patterns */
+.bg-staff-lines {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 20px,
+    rgba(75, 85, 161, 0.1) 20px,
+    rgba(75, 85, 161, 0.1) 21px
+  );
+}
+
+/* Custom gradients */
+.gradient-indian,
+.bg-gradient-indian {
+  background: linear-gradient(135deg, rgb(var(--saffron)) 0%, rgb(var(--deep-orange)) 100%);
+}
+
+.gradient-western,
+.bg-gradient-western {
+  background: linear-gradient(135deg, rgb(var(--indigo-blue)) 0%, rgb(var(--forest-green)) 100%);
+}
+
+.gradient-musical,
+.bg-gradient-musical {
+  background: linear-gradient(135deg, rgb(var(--gold)) 0%, rgb(var(--burgundy)) 100%);
+}
+
+/* Custom text colors */
+.text-saffron {
+  color: rgb(var(--saffron));
+}
+
+.text-indigo-blue {
+  color: rgb(var(--indigo-blue));
+}
+
+.border-saffron {
+  border-color: rgb(var(--saffron));
+}
+
+/* Enhanced shadows */
+.shadow-musical {
+  box-shadow: 
+    0 4px 6px -1px rgba(75, 85, 161, 0.1),
+    0 2px 4px -1px rgba(75, 85, 161, 0.06),
+    0 0 0 1px rgba(255, 153, 51, 0.05);
+}
+
+.shadow-indian {
+  box-shadow: 
+    0 10px 15px -3px rgba(255, 153, 51, 0.2),
+    0 4px 6px -2px rgba(255, 153, 51, 0.1);
+}
+
+/* Custom scrollbar styling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.8) rgba(229, 231, 235, 0.3);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.3);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.9);
+}
+
+.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.8);
+}
+
+.scrollbar-track-gray-200::-webkit-scrollbar-track {
+  background-color: rgba(229, 231, 235, 0.3);
+}
+
+/* Enhanced horizontal scrollbar for prediction areas */
+.predictions-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #8b5cf6 #e5e7eb;
+}
+
+.predictions-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.predictions-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.predictions-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #8b5cf6, #a855f7);
+  border-radius: 8px;
+  border: 1px solid #7c3aed;
+}
+
+.predictions-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #7c3aed, #9333ea);
+}
+
+/* Custom scrollbar for code areas */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(107, 114, 128, 0.6) rgba(229, 231, 235, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.3);
+  border-radius: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.6);
+  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+/* Synchronized horizontal scrollbars */
+.sync-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) rgba(229, 231, 235, 0.3);
+}
+
+.sync-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.sync-scroll-container::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.3);
+  border-radius: 6px;
+}
+
+.sync-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+.sync-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Blue theme for kann swar */
+.sync-scroll-blue::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+.sync-scroll-blue::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Green theme for swar */
+.sync-scroll-green::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.5);
+}
+
+.sync-scroll-green::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.7);
 }
